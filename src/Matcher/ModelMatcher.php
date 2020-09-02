@@ -22,18 +22,18 @@ final class ModelMatcher extends AbstractMatcher
     public function getMatches(array $tokens, array $info = [])
     {
         $buffer = new TokensBuffer($tokens);
-        $buffer->toEnd();
+        $buffer->reverse();
 
         $input = '';
 
         if ($buffer->is(T_STRING)) {
             $input = $buffer->asString();
-            $buffer->previous();
+            $buffer->next();
         }
 
-        $buffer->previous();
+        $buffer->next();
 
-        $class = $buffer->fullyQualifiedClassName(false);
+        $class = $buffer->fullyQualifiedClassName();
 
         $baseName = ltrim(strrchr($class, '\\') ?: $class, '\\');
         /** @var RepositoryInterface $repository */
@@ -66,16 +66,17 @@ final class ModelMatcher extends AbstractMatcher
         }
 
         $buffer = new TokensBuffer($tokens);
-        $buffer->toEnd();
+        $buffer->reverse();
 
+        // @todo nextIf
         if ($buffer->is(T_STRING)) {
-            $buffer->previous();
+            $buffer->next();
         }
 
         if (!$buffer->is(T_DOUBLE_COLON)) {
             return false;
         }
 
-        return is_subclass_of($buffer->previous()->fullyQualifiedClassName(false), Model::class);
+        return is_subclass_of($buffer->next()->fullyQualifiedClassName(), Model::class);
     }
 }

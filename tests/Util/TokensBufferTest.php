@@ -13,9 +13,8 @@ class TokensBufferTest extends PrimeShellTestCase
     public function test_cursor_startToEnd()
     {
         $buffer = new TokensBuffer($this->tokens(TestEntity::class.'::builder()->where("foo","bar")'));
-        $buffer->toStart();
 
-        $this->assertSame($buffer, $buffer->toStart());
+        $this->assertSame($buffer, $buffer->forward());
         $this->assertEquals('<?php ', $buffer->asString());
         $this->assertEquals('Bdf', $buffer->next()->asString());
         $this->assertEquals('\\', $buffer->next()->asString());
@@ -47,28 +46,39 @@ class TokensBufferTest extends PrimeShellTestCase
     {
         $buffer = new TokensBuffer($this->tokens(TestEntity::class.'::builder()->where("foo","bar")'));
 
-        $this->assertEquals(')', $buffer->toEnd()->asString());
-        $this->assertEquals('"bar"', $buffer->previous()->asString());
-        $this->assertEquals(',', $buffer->previous()->asString());
-        $this->assertEquals('"foo"', $buffer->previous()->asString());
-        $this->assertEquals('(', $buffer->previous()->asString());
-        $this->assertEquals('where', $buffer->previous()->asString());
-        $this->assertEquals('->', $buffer->previous()->asString());
-        $this->assertEquals(')', $buffer->previous()->asString());
-        $this->assertEquals('(', $buffer->previous()->asString());
-        $this->assertEquals('builder', $buffer->previous()->asString());
-        $this->assertEquals('::', $buffer->previous()->asString());
-        $this->assertEquals('TestEntity', $buffer->previous()->asString());
-        $this->assertEquals('\\', $buffer->previous()->asString());
-        $this->assertEquals('_files', $buffer->previous()->asString());
-        $this->assertEquals('\\', $buffer->previous()->asString());
-        $this->assertEquals('Shell', $buffer->previous()->asString());
-        $this->assertEquals('\\', $buffer->previous()->asString());
-        $this->assertEquals('Prime', $buffer->previous()->asString());
-        $this->assertEquals('\\', $buffer->previous()->asString());
-        $this->assertEquals('Bdf', $buffer->previous()->asString());
-        $this->assertEquals('<?php ', $buffer->previous()->asString());
-        $this->assertNull($buffer->previous()->asString());
+        $this->assertEquals(')', $buffer->reverse()->asString());
+        $this->assertEquals('"bar"', $buffer->next()->asString());
+        $this->assertEquals(',', $buffer->next()->asString());
+        $this->assertEquals('"foo"', $buffer->next()->asString());
+        $this->assertEquals('(', $buffer->next()->asString());
+        $this->assertEquals('where', $buffer->next()->asString());
+        $this->assertEquals('->', $buffer->next()->asString());
+        $this->assertEquals(')', $buffer->next()->asString());
+        $this->assertEquals('(', $buffer->next()->asString());
+        $this->assertEquals('builder', $buffer->next()->asString());
+        $this->assertEquals('::', $buffer->next()->asString());
+        $this->assertEquals('TestEntity', $buffer->next()->asString());
+        $this->assertEquals('\\', $buffer->next()->asString());
+        $this->assertEquals('_files', $buffer->next()->asString());
+        $this->assertEquals('\\', $buffer->next()->asString());
+        $this->assertEquals('Shell', $buffer->next()->asString());
+        $this->assertEquals('\\', $buffer->next()->asString());
+        $this->assertEquals('Prime', $buffer->next()->asString());
+        $this->assertEquals('\\', $buffer->next()->asString());
+        $this->assertEquals('Bdf', $buffer->next()->asString());
+        $this->assertEquals('<?php ', $buffer->next()->asString());
+        $this->assertNull($buffer->next()->asString());
+    }
+
+    /**
+     *
+     */
+    public function test_next()
+    {
+        $buffer = new TokensBuffer($this->tokens('builder()->where("foo","bar")'));
+
+        $this->assertTrue($buffer->next(3)->equals(')'));
+        $this->assertTrue($buffer->next(-2)->equals('builder'));
     }
 
     /**
@@ -91,7 +101,12 @@ class TokensBufferTest extends PrimeShellTestCase
 
         $this->assertTrue($buffer->next()->is(T_STRING));
         $this->assertFalse($buffer->is(T_DOUBLE_COLON));
-        $this->assertFalse($buffer->toEnd()->is(T_STRING));
+        $this->assertFalse($buffer->reverse()->is(T_STRING));
+
+        while ($buffer->current()) {
+            $buffer->next();
+        }
+
         $this->assertFalse($buffer->next()->is(T_STRING));
     }
 
@@ -104,7 +119,12 @@ class TokensBufferTest extends PrimeShellTestCase
 
         $this->assertTrue($buffer->next()->equals('Bdf'));
         $this->assertFalse($buffer->next()->equals('aaa'));
-        $this->assertTrue($buffer->toEnd()->equals(')'));
+        $this->assertTrue($buffer->reverse()->equals(')'));
+
+        while ($buffer->current()) {
+            $buffer->next();
+        }
+
         $this->assertFalse($buffer->next()->equals(')'));
     }
 
@@ -115,9 +135,9 @@ class TokensBufferTest extends PrimeShellTestCase
     {
         $buffer = new TokensBuffer($this->tokens(TestEntity::class.'::builder()->where("foo","bar")'));
 
-        $this->assertEquals(TestEntity::class, $buffer->next()->fullyQualifiedClassName(true));
+        $this->assertEquals(TestEntity::class, $buffer->next()->fullyQualifiedClassName());
         $this->assertTrue($buffer->is(T_DOUBLE_COLON));
-        $this->assertEquals(TestEntity::class, $buffer->previous()->fullyQualifiedClassName(false));
+        $this->assertEquals(TestEntity::class, $buffer->reverse()->next(11)->fullyQualifiedClassName());
         $this->assertTrue($buffer->is(T_OPEN_TAG));
     }
 
@@ -128,9 +148,9 @@ class TokensBufferTest extends PrimeShellTestCase
     {
         $buffer = new TokensBuffer($this->tokens('builder()->where("foo","bar")'));
 
-        $this->assertTrue($buffer->next()->matchInOrder(T_STRING, '(', ')', T_OBJECT_OPERATOR));
+        $this->assertTrue($buffer->next()->match(T_STRING, '(', ')', T_OBJECT_OPERATOR));
         $this->assertTrue($buffer->equals('where'));
-        $this->assertFalse($buffer->next()->matchInOrder('(', T_CONSTANT_ENCAPSED_STRING, ')'));
+        $this->assertFalse($buffer->next()->match('(', T_CONSTANT_ENCAPSED_STRING, ')'));
         $this->assertTrue($buffer->equals(','));
     }
 
@@ -140,11 +160,11 @@ class TokensBufferTest extends PrimeShellTestCase
     public function test_matchReverseOrder()
     {
         $buffer = new TokensBuffer($this->tokens('builder()->where("foo","bar")'));
-        $buffer->toEnd();
+        $buffer->reverse();
 
-        $this->assertTrue($buffer->matchReverseOrder(')', T_CONSTANT_ENCAPSED_STRING, ',', T_CONSTANT_ENCAPSED_STRING, '('));
+        $this->assertTrue($buffer->match(')', T_CONSTANT_ENCAPSED_STRING, ',', T_CONSTANT_ENCAPSED_STRING, '('));
         $this->assertTrue($buffer->equals('where'));
-        $this->assertFalse($buffer->previous()->previous()->matchReverseOrder(')', T_CONSTANT_ENCAPSED_STRING, '('));
+        $this->assertFalse($buffer->next(2)->match(')', T_CONSTANT_ENCAPSED_STRING, '('));
         $this->assertTrue($buffer->equals('('));
     }
 
@@ -156,7 +176,7 @@ class TokensBufferTest extends PrimeShellTestCase
         $buffer = new TokensBuffer($this->tokens('builder()->where("foo","bar")'));
 
         $this->assertEquals([], $buffer->before());
-        $this->assertEquals($this->tokens('builder()->where("foo","bar"'), $buffer->toEnd()->before());
-        $this->assertEquals($this->tokens('builder()'), $buffer->toStart()->next()->next()->next()->next()->before());
+        $this->assertEquals($this->tokens('builder()->where("foo","bar"'), $buffer->reverse()->before());
+        $this->assertEquals($this->tokens('builder()'), $buffer->forward()->next(4)->before());
     }
 }

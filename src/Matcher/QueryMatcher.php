@@ -49,11 +49,11 @@ final class QueryMatcher extends AbstractQueryMatcher
     public function hasMatched(array $tokens)
     {
         $buffer = new TokensBuffer($tokens);
-        $buffer->toEnd();
+        $buffer->reverse();
 
         // query()->xxx
         if ($buffer->is(T_STRING)) {
-            $buffer->previous();
+            $buffer->next();
         }
 
         // query()->

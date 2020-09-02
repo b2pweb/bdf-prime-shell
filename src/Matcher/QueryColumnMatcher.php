@@ -64,25 +64,25 @@ final class QueryColumnMatcher extends AbstractQueryMatcher
         ];
 
         $buffer = new TokensBuffer($tokens);
-        $buffer->toEnd();
+        $buffer->reverse();
 
         if ($buffer->is(T_ENCAPSED_AND_WHITESPACE)) {
             $hasOpenQuote = true;
             $parsed['input'] = $buffer->asString();
-            $buffer->previous();
+            $buffer->next();
         }
 
         if ($buffer->equals('"')) {
             $hasOpenQuote = true;
             $parsed['quote'] = '"';
-            $buffer->previous();
+            $buffer->next();
         }
 
         if (!$hasOpenQuote) {
             return null;
         }
 
-        if (!$buffer->matchReverseOrder('(', T_STRING)) {
+        if (!$buffer->match('(', T_STRING)) {
             return null;
         }
 
@@ -93,7 +93,7 @@ final class QueryColumnMatcher extends AbstractQueryMatcher
             }
 
             $parsed['query'] = $query;
-            $parsed['method'] = $buffer->next()->asString();
+            $parsed['method'] = $buffer->next(-1)->asString();
 
             return $parsed;
         }
@@ -103,8 +103,8 @@ final class QueryColumnMatcher extends AbstractQueryMatcher
             return null;
         }
 
-        $parsed['method'] = $buffer->next()->asString();
-        $className = $buffer->previous()->previous()->fullyQualifiedClassName(false);
+        $parsed['method'] = $buffer->next(-1)->asString();
+        $className = $buffer->next(2)->fullyQualifiedClassName();
 
         if (!is_subclass_of($className, Model::class)) {
             return null;

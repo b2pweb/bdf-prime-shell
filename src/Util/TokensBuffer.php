@@ -4,8 +4,6 @@ namespace Bdf\Prime\Shell\Util;
 
 /**
  * Simple buffer for parse PHP tokens
- *
- * @todo reverse order
  */
 final class TokensBuffer
 {
@@ -20,6 +18,11 @@ final class TokensBuffer
     private $cursor = 0;
 
     /**
+     * @var int
+     */
+    private $direction = 1;
+
+    /**
      * TokensBuffer constructor.
      *
      * @param array $tokens
@@ -27,6 +30,36 @@ final class TokensBuffer
     public function __construct(array $tokens)
     {
         $this->tokens = $tokens;
+    }
+
+    /**
+     * Reverse the buffer order :
+     * - The buffer cursor will be set to the end
+     * - next() calls will move to previous token
+     *
+     * @return $this
+     */
+    public function reverse(): TokensBuffer
+    {
+        $this->cursor = count($this->tokens) - 1;
+        $this->direction = -1;
+
+        return $this;
+    }
+
+    /**
+     * Reset the cursor and move forward
+     * - The buffer cursor will be set to the start
+     * - next() calls will move to next token
+     *
+     * @return $this
+     */
+    public function forward(): TokensBuffer
+    {
+        $this->cursor = 0;
+        $this->direction = 1;
+
+        return $this;
     }
 
     /**
@@ -57,49 +90,14 @@ final class TokensBuffer
     }
 
     /**
-     * Move cursor to buffer start
-     *
-     * @return $this
-     */
-    public function toStart(): TokensBuffer
-    {
-        $this->cursor = 0;
-
-        return $this;
-    }
-
-    /**
-     * Move cursor to buffer end
-     *
-     * @return $this
-     */
-    public function toEnd(): TokensBuffer
-    {
-        $this->cursor = count($this->tokens) - 1;
-
-        return $this;
-    }
-
-    /**
-     * Move cursor to the previous token
-     *
-     * @return $this
-     */
-    public function previous(): TokensBuffer
-    {
-        --$this->cursor;
-
-        return $this;
-    }
-
-    /**
      * Move cursor to the next token
      *
+     * @param int $count number of tokens to skip
      * @return $this
      */
-    public function next(): TokensBuffer
+    public function next(int $count = 1): TokensBuffer
     {
-        ++$this->cursor;
+        $this->cursor += $count * $this->direction;
 
         return $this;
     }
@@ -143,51 +141,46 @@ final class TokensBuffer
     /**
      * Parse the tokens at the cursor position to extract a fully qualified class name (i.e. class name with namespace)
      *
-     * @param bool $inOrder true to parse in order (cursor is on the first FQCN token, and should move forward), or false to parse in reverse order (cursor is on the class name, and should move backward)
-     *
      * @return string
      */
-    public function fullyQualifiedClassName(bool $inOrder): string
+    public function fullyQualifiedClassName(): string
     {
         $className = '';
 
         while ($this->is(T_STRING) || $this->is(T_NS_SEPARATOR)) {
-            if ($inOrder) {
+            if ($this->direction === 1) {
                 $className .= $this->asString();
-                $this->next();
             } else {
                 $className = $this->asString().$className;
-                $this->previous();
             }
+
+            $this->next();
         }
 
         return $className;
     }
 
     /**
-     * Check the next tokens on the buffer in the order
+     * Check the next tokens on the buffer
      * The first parameter is the current token, the second is the next, etc...
      *
      * @param string|int ...$tokens The tokens string value or type
      *
      * @return bool true if all match
      */
-    public function matchInOrder(...$tokens): bool
+    public function match(...$tokens): bool
     {
-        return $this->match(true, ...$tokens);
-    }
+        foreach ($tokens as $token) {
+            $match = is_int($token) ? $this->is($token) : $this->equals($token);
 
-    /**
-     * Check the previous tokens on the buffer in the reverse order
-     * The first parameter is the current token, the second is the previous, etc...
-     *
-     * @param string|int ...$tokens The tokens string value or type
-     *
-     * @return bool true if all match
-     */
-    public function matchReverseOrder(...$tokens): bool
-    {
-        return $this->match(false, ...$tokens);
+            if (!$match) {
+                return false;
+            }
+
+            $this->cursor += $this->direction;
+        }
+
+        return true;
     }
 
     /**
@@ -198,22 +191,5 @@ final class TokensBuffer
     public function before(): array
     {
         return array_slice($this->tokens, 0, $this->cursor);
-    }
-
-    private function match(bool $inOrder, ...$tokens): bool
-    {
-        $inc = $inOrder ? 1 : -1;
-
-        foreach ($tokens as $token) {
-            $match = is_int($token) ? $this->is($token) : $this->equals($token);
-
-            if (!$match) {
-                return false;
-            }
-
-            $this->cursor += $inc;
-        }
-
-        return true;
     }
 }
