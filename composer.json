@@ -1,0 +1,36 @@
+{
+    "name": "b2p/bdf-prime-shell",
+    "description": "Bdf prime MongoDB component",
+    "type": "library",
+    "license": "proprietary",
+    "config": {
+        "secure-http": false
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "http://packagist.b2pweb.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Bdf\\Prime\\Shell\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Bdf\\Prime\\Shell\\": "tests"
+        }
+    },
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=7.1",
+        "b2p/bdf-prime": "~1.6",
+        "symfony/console": "~4.0",
+        "psy/psysh": "~0.10",
+        "b2pweb/bdf-collections": "~1.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~7.0"
+    }
+}

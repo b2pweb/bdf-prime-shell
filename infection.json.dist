@@ -1,0 +1,16 @@
+{
+  "source": {
+    "directories": ["src"]
+  },
+  "timeout": 10,
+  "logs": {
+    "text": "infection.log",
+    "summary": "summary.log",
+    "perMutator": "per-mutator.md"
+  },
+  "phpUnit": {
+    "configDir": "./"
+  },
+  "testFramework":"phpunit",
+  "testFrameworkOptions": "-vvv"
+}

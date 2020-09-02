@@ -1,0 +1,81 @@
+<?php
+
+namespace Bdf\Prime\Shell\Matcher;
+
+use Bdf\Prime\Entity\Model;
+use Bdf\Prime\Repository\RepositoryInterface;
+use Bdf\Prime\Shell\Util\StreamTrait;
+use Bdf\Prime\Shell\Util\TokensBuffer;
+use Psy\TabCompletion\Matcher\AbstractMatcher;
+use ReflectionMethod;
+
+/**
+ * Add active record model methods auto complete
+ */
+final class ModelMatcher extends AbstractMatcher
+{
+    use StreamTrait;
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getMatches(array $tokens, array $info = [])
+    {
+        $buffer = new TokensBuffer($tokens);
+        $buffer->toEnd();
+
+        $input = '';
+
+        if ($buffer->is(T_STRING)) {
+            $input = $buffer->asString();
+            $buffer->previous();
+        }
+
+        $buffer->previous();
+
+        $class = $buffer->fullyQualifiedClassName(false);
+
+        $baseName = ltrim(strrchr($class, '\\') ?: $class, '\\');
+        /** @var RepositoryInterface $repository */
+        $repository = $class::repository();
+
+        // Active repository is not enabled
+        if (!$repository) {
+            return [];
+        }
+
+        return $this->methodsStream($repository, $repository->queries(), $repository->queries()->builder())
+            ->filter(function (ReflectionMethod $method) use($input) {
+                return self::startsWith($input, $method->getName());
+            })
+            ->map(function (ReflectionMethod $method) use($baseName) {
+                return $baseName.'::'.$method->getName().'('.($method->getNumberOfRequiredParameters() > 0 ? '' : ')');
+            })
+            ->distinct()
+            ->toArray(false)
+        ;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function hasMatched(array $tokens)
+    {
+        if (Model::locator() === null) {
+            return false;
+        }
+
+        $buffer = new TokensBuffer($tokens);
+        $buffer->toEnd();
+
+        if ($buffer->is(T_STRING)) {
+            $buffer->previous();
+        }
+
+        if (!$buffer->is(T_DOUBLE_COLON)) {
+            return false;
+        }
+
+        return is_subclass_of($buffer->previous()->fullyQualifiedClassName(false), Model::class);
+    }
+}

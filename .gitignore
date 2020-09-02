@@ -1,0 +1,5 @@
+.idea/
+vendor/
+*.log
+per-mutator.md
+composer.lock
