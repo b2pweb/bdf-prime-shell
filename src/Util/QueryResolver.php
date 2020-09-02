@@ -1,21 +1,18 @@
 <?php
 
-namespace Bdf\Prime\Shell\Matcher;
+namespace Bdf\Prime\Shell\Util;
 
 use Bdf\Collection\Util\Functor\Transformer\Getter;
 use Bdf\Prime\Entity\Model;
 use Bdf\Prime\Query\CommandInterface;
-use Psy\TabCompletion\Matcher\AbstractMatcher;
 use ReflectionObject;
+use Throwable;
 
 /**
  * Add query method autocomplete
  * Handle method chaining
- *
- * @todo Utility class
- * @todo refactor
  */
-abstract class AbstractQueryMatcher extends AbstractMatcher
+final class QueryResolver
 {
     /**
      * @var CommandInterface|null
@@ -23,56 +20,48 @@ abstract class AbstractQueryMatcher extends AbstractMatcher
     private $lastQuery;
 
     /**
-     * @var array|null
+     * @var array
      */
     private $lastTokens;
 
-
     /**
-     * @param array $tokens
+     * @param TokensBuffer $buffer
      * @return CommandInterface|null
      *
      * @todo handle variable
+     * @todo cache
      */
-    final protected function getQuery(array $tokens): ?CommandInterface
+    final public function resolve(TokensBuffer $buffer): ?CommandInterface
     {
-        if ($this->lastQuery !== null && $tokens == $this->lastTokens) {
+        if ($this->lastQuery !== null && $this->lastTokens == $buffer->all()) {
             return $this->lastQuery;
         }
 
         $this->lastQuery = null;
         $this->lastTokens = null;
 
-        $class = '';
-        $current = 1;
-
-        for (; isset($tokens[$current]) && self::hasToken([self::T_NS_SEPARATOR, self::T_STRING], $tokens[$current]); ++$current) {
-            $class .= $tokens[$current][1];
-        }
+        $buffer->forward();
+        $class = $buffer->next()->fullyQualifiedClassName();
 
         if (!is_subclass_of($class, Model::class)) {
             return null;
         }
 
-        if (!isset($tokens[$current]) || !self::tokenIs($tokens[$current++], self::T_DOUBLE_COLON)) {
-            return null;
-        }
-
-        if (!isset($tokens[$current]) || !self::tokenIs($tokens[$current], self::T_STRING)) {
+        if (!$buffer->match(T_DOUBLE_COLON, T_STRING)) {
             return null;
         }
 
         // Ignore repository method call
-        if ($tokens[$current][1] === 'repository') {
-            $current += 4; // skip repository and parenthesis and object operator
+        if ($buffer->equals('repository', -1)) {
+            $buffer->next(4); // skip repository and parenthesis and object operator
         }
 
-        if (!isset($tokens[$current])) {
+        if (!$buffer->valid()) {
             return null;
         }
 
         $repository = $class::repository();
-        $method = $tokens[$current][1];
+        $method = $buffer->asString(-1);
 
         // @todo check not in repository nor query factory
         $availableMethods = ['builder', 'with', 'without', 'by', 'wrapAs', 'where', 'make', 'keyValue'];
@@ -90,25 +79,32 @@ abstract class AbstractQueryMatcher extends AbstractMatcher
 
         $line = '';
 
-        foreach (array_slice($tokens, 1) as $token) {
-            $strToken = is_array($token) ? $token[1] : $token;
+        $buffer->goTo(1);
+
+        while ($buffer->valid()) {
+            $strToken = $buffer->asString();
 
             // Disallow execution calls
-            if (in_array(strtolower($strToken), ['execute', 'first', 'all', 'inRows', 'inRow', 'update', 'insert', 'replace', 'find', 'findone', 'count', 'sum', 'avg', 'max', 'min', 'aggregate'])) {
+            if (in_array(strtolower($strToken), ['execute', 'first', 'all', 'inrows', 'inrow', 'update', 'insert', 'replace', 'find', 'findone', 'count', 'sum', 'avg', 'max', 'min', 'aggregate'])) {
                 return null;
             }
 
             $line .= $strToken;
+            $buffer->next();
         }
 
-        $query = eval('return '.$line.';');
+        try {
+            $query = eval("return $line;");
+        } catch (Throwable $e) {
+            return null;
+        }
 
         if (!$query instanceof CommandInterface) {
             return null;
         }
 
         $this->lastQuery = $query;
-        $this->lastTokens = $tokens;
+        $this->lastTokens = $buffer->all();
 
         return $query;
     }

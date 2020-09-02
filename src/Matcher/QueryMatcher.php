@@ -3,8 +3,10 @@
 namespace Bdf\Prime\Shell\Matcher;
 
 use Bdf\Prime\Shell\Util\QueryExtensionGetterTrait;
+use Bdf\Prime\Shell\Util\QueryResolver;
 use Bdf\Prime\Shell\Util\StreamTrait;
 use Bdf\Prime\Shell\Util\TokensBuffer;
+use Psy\TabCompletion\Matcher\AbstractMatcher;
 use ReflectionMethod;
 use function array_pop;
 
@@ -12,7 +14,7 @@ use function array_pop;
  * Add query method autocomplete
  * Handle method chaining
  */
-final class QueryMatcher extends AbstractQueryMatcher
+final class QueryMatcher extends AbstractMatcher
 {
     use QueryExtensionGetterTrait;
     use StreamTrait;
@@ -29,7 +31,7 @@ final class QueryMatcher extends AbstractQueryMatcher
             $input = $token[1];
         }
 
-        $query = $this->getQuery($tokens);
+        $query = (new QueryResolver())->resolve(new TokensBuffer($tokens));
 
         return $this->methodsStream($query, $this->getExtension($query))
             ->filter(function (\ReflectionMethod $method) use($input) {
@@ -61,6 +63,6 @@ final class QueryMatcher extends AbstractQueryMatcher
             return false;
         }
 
-        return $this->getQuery($buffer->before()) !== null;
+        return (new QueryResolver())->resolve($buffer->before()) !== null;
     }
 }

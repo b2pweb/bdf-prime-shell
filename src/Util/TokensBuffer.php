@@ -66,25 +66,35 @@ final class TokensBuffer
      * Get the current token
      * Return null if there is no token at the current position
      *
+     * @param int $offset The token offset. Positive integer for next token, or negative for previous
+     *
      * @return string|array|null
      */
-    public function current()
+    public function get(int $offset = 0)
     {
-        return $this->tokens[$this->cursor] ?? null;
+        return $this->tokens[$this->cursor + $offset * $this->direction] ?? null;
+    }
+
+    /**
+     * Check if the current cursor position is valid
+     *
+     * @return bool
+     */
+    public function valid(): bool
+    {
+        return isset($this->tokens[$this->cursor]);
     }
 
     /**
      * Get the string (i.e. code) value of a token
      *
+     * @param int $offset The token offset. Positive integer for next token, or negative for previous
+     *
      * @return string|null The token string, or null if not found
      */
-    public function asString(): ?string
+    public function asString(int $offset = 0): ?string
     {
-        if (!isset($this->tokens[$this->cursor])) {
-            return null;
-        }
-
-        $token = $this->tokens[$this->cursor];
+        $token = $this->get($offset);
 
         return is_array($token) ? $token[1] : $token;
     }
@@ -103,15 +113,31 @@ final class TokensBuffer
     }
 
     /**
+     * Go to the given position (absolute)
+     * The position starts at 0
+     *
+     * @param int $position The token position (absolute)
+     *
+     * @return $this
+     */
+    public function goTo(int $position): TokensBuffer
+    {
+        $this->cursor = $position;
+
+        return $this;
+    }
+
+    /**
      * Check the token type
      *
      * @param int $type On of the T_* constant
+     * @param int $offset The token offset. Positive integer for next token, or negative for previous
      *
      * @return bool true if the token exists, and match with the given type
      */
-    public function is(int $type): bool
+    public function is(int $type, int $offset = 0): bool
     {
-        $token = $this->current();
+        $token = $this->get($offset);
 
         return is_array($token) && $token[0] === $type;
     }
@@ -120,12 +146,13 @@ final class TokensBuffer
      * Check the current token string value
      *
      * @param string $value The expected token value
+     * @param int $offset The token offset. Positive integer for next token, or negative for previous
      *
      * @return bool true if the token exists and match with the given value
      */
-    public function equals(string $value): bool
+    public function equals(string $value, int $offset = 0): bool
     {
-        $token = $this->current();
+        $token = $this->get($offset);
 
         if (empty($token)) {
             return false;
@@ -184,12 +211,22 @@ final class TokensBuffer
     }
 
     /**
-     * Get all tokens before the cursor position
+     * Get a new TokensBuffer containing all tokens before the cursor position
+     *
+     * @return TokensBuffer The new buffer instance
+     */
+    public function before(): TokensBuffer
+    {
+        return new TokensBuffer(array_slice($this->tokens, 0, $this->cursor));
+    }
+
+    /**
+     * Get all tokens
      *
      * @return array
      */
-    public function before(): array
+    public function all(): array
     {
-        return array_slice($this->tokens, 0, $this->cursor);
+        return $this->tokens;
     }
 }

@@ -7,15 +7,17 @@ use Bdf\Prime\Entity\Model;
 use Bdf\Prime\Query\CommandInterface;
 use Bdf\Prime\Repository\RepositoryInterface;
 use Bdf\Prime\Shell\Util\QueryExtensionGetterTrait;
+use Bdf\Prime\Shell\Util\QueryResolver;
 use Bdf\Prime\Shell\Util\StreamTrait;
 use Bdf\Prime\Shell\Util\TokensBuffer;
+use Psy\TabCompletion\Matcher\AbstractMatcher;
 use ReflectionException;
 use ReflectionObject;
 
 /**
  * Autocomplete the columns on query methods parameters, like where
  */
-final class QueryColumnMatcher extends AbstractQueryMatcher
+final class QueryColumnMatcher extends AbstractMatcher
 {
     use QueryExtensionGetterTrait;
     use StreamTrait;
@@ -88,7 +90,7 @@ final class QueryColumnMatcher extends AbstractQueryMatcher
 
         // Handle query()->method("
         if ($buffer->is(T_OBJECT_OPERATOR)) {
-            if (($query = $this->getQuery($buffer->before())) === null) {
+            if (($query = (new QueryResolver())->resolve($buffer->before())) === null) {
                 return null;
             }
 
