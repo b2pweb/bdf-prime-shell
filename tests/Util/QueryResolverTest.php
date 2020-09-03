@@ -5,6 +5,7 @@ namespace Bdf\Prime\Shell\Util;
 use Bdf\Prime\Shell\_files\TestEntity;
 use Bdf\Prime\Shell\PrimeShellTestCase;
 use Doctrine\DBAL\Logging\DebugStack;
+use Psy\Context;
 
 /**
  *
@@ -113,5 +114,44 @@ class QueryResolverTest extends PrimeShellTestCase
         );
 
         $this->assertNotEquals($query, $resolver->resolve(new TokensBuffer($this->tokens(TestEntity::class.'::builder()->where("foo", "bar")'))));
+    }
+
+    /**
+     *
+     */
+    public function test_resolve_with_variable()
+    {
+        $context = new Context();
+        $resolver = new QueryResolver();
+        $resolver->setContext($context);
+
+        $context->setAll(['query' => $query = TestEntity::builder()]);
+        $this->assertEquals("SELECT t0.* FROM test_entity t0 WHERE foo = 'bar'", $resolver->resolve(new TokensBuffer($this->tokens('$query->where("foo", "bar")')))->toRawSql());
+        $this->assertNotSame($query, $resolver->resolve(new TokensBuffer($this->tokens('$query->where("foo", "bar")'))));
+
+        $context->setAll(['repo' => TestEntity::repository()]);
+        $this->assertEquals("SELECT t0.* FROM test_entity t0 WHERE foo = 'bar'", $resolver->resolve(new TokensBuffer($this->tokens('$repo->where("foo", "bar")')))->toRawSql());
+    }
+
+    /**
+     *
+     */
+    public function test_resolve_fail_with_variable()
+    {
+        $context = new Context();
+        $resolver = new QueryResolver();
+        $resolver->setContext($context);
+
+        $this->assertNull($resolver->resolve(new TokensBuffer($this->tokens('$query->where("foo","bar")'))));
+
+        $context->setAll([
+            'query' => TestEntity::builder(),
+            'repo' => TestEntity::repository(),
+        ]);
+        $this->assertNull($resolver->resolve(new TokensBuffer($this->tokens('$notFound->where("foo","bar")'))));
+        $this->assertNull($resolver->resolve(new TokensBuffer($this->tokens('$repo->connection()'))));
+        $this->assertNull($resolver->resolve(new TokensBuffer($this->tokens('$repo->invalid()'))));
+        $this->assertNull($resolver->resolve(new TokensBuffer($this->tokens('$query->where("foo","bar")->first()'))));
+        $this->assertNull($resolver->resolve(new TokensBuffer($this->tokens(TestEntity::class.'::builder()->first()'))));
     }
 }

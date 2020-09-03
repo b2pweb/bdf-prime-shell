@@ -17,6 +17,7 @@ use Bdf\Prime\Types\TypeInterface;
 use Bdf\Serializer\Normalizer\ObjectNormalizer;
 use Bdf\Serializer\SerializerBuilder;
 use PHPUnit\Framework\TestCase;
+use Psy\TabCompletion\Matcher\AbstractMatcher;
 
 /**
  *
@@ -75,6 +76,10 @@ class PrimeShellTestCase extends TestCase
 
     public function tokens(string $line): array
     {
-        return token_get_all('<?php '.$line);
+        $tokens = token_get_all('<?php '.$line);
+
+        return \array_filter($tokens, function ($token) {
+            return !AbstractMatcher::tokenIs($token, AbstractMatcher::T_WHITESPACE);
+        });
     }
 }

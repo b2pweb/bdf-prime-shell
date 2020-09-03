@@ -183,4 +183,25 @@ class TokensBufferTest extends PrimeShellTestCase
         $this->assertEquals(new TokensBuffer($this->tokens('builder()->where("foo","bar"')), $buffer->reverse()->before());
         $this->assertEquals(new TokensBuffer($this->tokens('builder()')), $buffer->forward()->next(4)->before());
     }
+
+    /**
+     *
+     */
+    public function test_all()
+    {
+        $buffer = new TokensBuffer($this->tokens('builder()  ->  where  (  "foo"  ,  "bar"  )'));
+
+        $this->assertSame([
+            [T_OPEN_TAG, '<?php ', 1],
+            [T_STRING, 'builder', 1],
+            '(', ')',
+            [T_OBJECT_OPERATOR, '->', 1],
+            [T_STRING, 'where', 1],
+            '(',
+            [T_CONSTANT_ENCAPSED_STRING, '"foo"', 1],
+            ',',
+            [T_CONSTANT_ENCAPSED_STRING, '"bar"', 1],
+            ')',
+        ], $buffer->all());
+    }
 }

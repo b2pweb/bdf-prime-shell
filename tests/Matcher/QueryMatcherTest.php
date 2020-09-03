@@ -4,6 +4,7 @@ namespace Bdf\Prime\Shell\Matcher;
 
 use Bdf\Prime\Shell\_files\TestEntity;
 use Bdf\Prime\Shell\PrimeShellTestCase;
+use Psy\Context;
 
 /**
  *
@@ -52,9 +53,31 @@ class QueryMatcherTest extends PrimeShellTestCase
     /**
      *
      */
-    public function test_getMatches()
+    public function test_getMatches_with_static_call()
     {
         $matches = $this->matcher->getMatches($this->tokens(TestEntity::class.'::where("id", 5)->'));
+
+        $this->assertSame(range(0, count($matches) - 1), array_keys($matches));
+
+        $this->assertContains('where(', $matches);
+        $this->assertContains('orWhere(', $matches);
+        $this->assertContains('first()', $matches);
+        $this->assertContains('all()', $matches);
+        $this->assertContains('toSql()', $matches);
+        $this->assertContains('count()', $matches);
+        $this->assertContains('by(', $matches);
+
+        $this->assertNotContains('__toString()', $matches);
+    }
+
+    /**
+     *
+     */
+    public function test_getMatches_with_variable()
+    {
+        $this->matcher->setContext($context = new Context());
+        $context->setAll(['query' => TestEntity::builder()]);
+        $matches = $this->matcher->getMatches($this->tokens('$query->where("id", 5)->'));
 
         $this->assertSame(range(0, count($matches) - 1), array_keys($matches));
 

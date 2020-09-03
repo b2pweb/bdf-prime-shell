@@ -6,6 +6,8 @@ use Bdf\Prime\Shell\Util\QueryExtensionGetterTrait;
 use Bdf\Prime\Shell\Util\QueryResolver;
 use Bdf\Prime\Shell\Util\StreamTrait;
 use Bdf\Prime\Shell\Util\TokensBuffer;
+use Psy\Context;
+use Psy\ContextAware;
 use Psy\TabCompletion\Matcher\AbstractMatcher;
 use ReflectionMethod;
 use function array_pop;
@@ -14,10 +16,31 @@ use function array_pop;
  * Add query method autocomplete
  * Handle method chaining
  */
-final class QueryMatcher extends AbstractMatcher
+final class QueryMatcher extends AbstractMatcher implements ContextAware
 {
     use QueryExtensionGetterTrait;
     use StreamTrait;
+
+    /**
+     * @var QueryResolver
+     */
+    private $resolver;
+
+    /**
+     * QueryMatcher constructor.
+     */
+    public function __construct()
+    {
+        $this->resolver = new QueryResolver();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setContext(Context $context)
+    {
+        $this->resolver->setContext($context);
+    }
 
     /**
      * {@inheritdoc}
@@ -31,7 +54,7 @@ final class QueryMatcher extends AbstractMatcher
             $input = $token[1];
         }
 
-        $query = (new QueryResolver())->resolve(new TokensBuffer($tokens));
+        $query = $this->resolver->resolve(new TokensBuffer($tokens));
 
         return $this->methodsStream($query, $this->getExtension($query))
             ->filter(function (\ReflectionMethod $method) use($input) {
@@ -63,6 +86,6 @@ final class QueryMatcher extends AbstractMatcher
             return false;
         }
 
-        return (new QueryResolver())->resolve($buffer->before()) !== null;
+        return $this->resolver->resolve($buffer->before()) !== null;
     }
 }

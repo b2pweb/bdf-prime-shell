@@ -29,7 +29,7 @@ final class TokensBuffer
      */
     public function __construct(array $tokens)
     {
-        $this->tokens = $tokens;
+        $this->tokens = array_values($tokens);
     }
 
     /**

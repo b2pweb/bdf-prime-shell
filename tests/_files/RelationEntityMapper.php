@@ -21,4 +21,12 @@ class RelationEntityMapper extends Mapper
             ->string('name')
         ;
     }
+
+    public function buildRelations($builder)
+    {
+        $builder->on('entity')
+            ->hasMany(TestEntity::class.'::relation.id')
+            ->detached()
+        ;
+    }
 }

@@ -10,6 +10,8 @@ use Bdf\Prime\Shell\Util\QueryExtensionGetterTrait;
 use Bdf\Prime\Shell\Util\QueryResolver;
 use Bdf\Prime\Shell\Util\StreamTrait;
 use Bdf\Prime\Shell\Util\TokensBuffer;
+use Psy\Context;
+use Psy\ContextAware;
 use Psy\TabCompletion\Matcher\AbstractMatcher;
 use ReflectionException;
 use ReflectionObject;
@@ -17,10 +19,31 @@ use ReflectionObject;
 /**
  * Autocomplete the columns on query methods parameters, like where
  */
-final class QueryColumnMatcher extends AbstractMatcher
+final class QueryColumnMatcher extends AbstractMatcher implements ContextAware
 {
     use QueryExtensionGetterTrait;
     use StreamTrait;
+
+    /**
+     * @var QueryResolver
+     */
+    private $resolver;
+
+    /**
+     * QueryColumnMatcher constructor.
+     */
+    public function __construct()
+    {
+        $this->resolver = new QueryResolver();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setContext(Context $context)
+    {
+        $this->resolver->setContext($context);
+    }
 
     /**
      * {@inheritdoc}
@@ -88,14 +111,15 @@ final class QueryColumnMatcher extends AbstractMatcher
             return null;
         }
 
+        $parsed['method'] = $buffer->asString(-1);
+
         // Handle query()->method("
         if ($buffer->is(T_OBJECT_OPERATOR)) {
-            if (($query = (new QueryResolver())->resolve($buffer->before())) === null) {
+            if (($query = $this->resolver->resolve($buffer->before())) === null) {
                 return null;
             }
 
             $parsed['query'] = $query;
-            $parsed['method'] = $buffer->next(-1)->asString();
 
             return $parsed;
         }
@@ -105,8 +129,7 @@ final class QueryColumnMatcher extends AbstractMatcher
             return null;
         }
 
-        $parsed['method'] = $buffer->next(-1)->asString();
-        $className = $buffer->next(2)->fullyQualifiedClassName();
+        $className = $buffer->next()->fullyQualifiedClassName();
 
         if (!is_subclass_of($className, Model::class)) {
             return null;
@@ -147,19 +170,31 @@ final class QueryColumnMatcher extends AbstractMatcher
      *
      * @param RepositoryInterface $repository
      * @param string $prefix
+     * @param array $visitedRepositories
      *
      * @return string[]
      */
-    private function getAllAttributes(RepositoryInterface $repository, string $prefix = ''): array
+    private function getAllAttributes(RepositoryInterface $repository, string $prefix = '', array &$visitedRepositories = []): array
     {
+        if (in_array($repository, $visitedRepositories, true)) {
+            return [];
+        }
+
         $attributes = [];
+        $visitedRepositories[] = $repository;
 
         foreach ($repository->metadata()->attributes as $attribute => $_) {
             $attributes[] = $prefix.$attribute;
         }
 
         foreach ($repository->mapper()->relations() as $relation => $_) {
-            foreach ($this->getAllAttributes($repository->relation($relation)->relationRepository(), $prefix.$relation.'.') as $attribute) {
+            $distant = $repository->relation($relation)->relationRepository();
+
+            if (!$distant) {
+                continue;
+            }
+
+            foreach ($this->getAllAttributes($distant, $prefix.$relation.'.', $visitedRepositories) as $attribute) {
                 $attributes[] = $attribute;
             }
         }

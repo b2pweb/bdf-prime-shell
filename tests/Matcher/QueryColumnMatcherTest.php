@@ -5,6 +5,7 @@ namespace Bdf\Prime\Shell\Matcher;
 use Bdf\Prime\Entity\Model;
 use Bdf\Prime\Shell\_files\TestEntity;
 use Bdf\Prime\Shell\PrimeShellTestCase;
+use Psy\Context;
 
 class QueryColumnMatcherTest extends PrimeShellTestCase
 {
@@ -54,5 +55,18 @@ class QueryColumnMatcherTest extends PrimeShellTestCase
         $this->assertEquals(['id"', 'value"', 'relation.id"', 'relation.name"'], $this->matcher->getMatches($this->tokens(TestEntity::class.'::builder()->where("')));
         $this->assertEquals(['id\'', 'value\'', 'relation.id\'', 'relation.name\''], $this->matcher->getMatches($this->tokens(TestEntity::class.'::builder()->where(\'')));
         $this->assertEquals(['relation.id"', 'relation.name"'], $this->matcher->getMatches($this->tokens(TestEntity::class.'::builder()->where("r')));
+    }
+
+    /**
+     *
+     */
+    public function test_getMatches_with_variable()
+    {
+        $this->matcher->setContext($context = new Context());
+        $context->setAll(['query' => TestEntity::builder()]);
+
+        $this->assertEquals(['id"', 'value"', 'relation.id"', 'relation.name"'], $this->matcher->getMatches($this->tokens('$query->where("')));
+        $this->assertEquals(['id\'', 'value\'', 'relation.id\'', 'relation.name\''], $this->matcher->getMatches($this->tokens('$query->where(\'')));
+        $this->assertEquals(['relation.id"', 'relation.name"'], $this->matcher->getMatches($this->tokens('$query->where("r')));
     }
 }
