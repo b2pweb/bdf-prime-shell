@@ -7,6 +7,8 @@ use Bdf\Prime\ServiceLocator;
 
 /**
  * Caster for entity objects
+ *
+ * @implements PrimeCasterInterface<EntityInterface>
  */
 final class EntityCaster implements PrimeCasterInterface
 {
@@ -37,11 +39,7 @@ final class EntityCaster implements PrimeCasterInterface
      */
     public function __invoke($object): array
     {
-        if (($hydrator = $this->prime->hydrator($object)) === null) {
-            return [];
-        }
-
-        return $this->filter($hydrator->extract($object));
+        return $this->filter($this->prime->hydrator($object)->extract($object));
     }
 
     private function filter(array $entity): array

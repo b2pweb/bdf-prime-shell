@@ -33,16 +33,13 @@ final class ModelMatcher extends AbstractMatcher
 
         $buffer->next();
 
+        /** @var class-string<Model> $class */
         $class = $buffer->fullyQualifiedClassName();
 
         $baseName = ltrim(strrchr($class, '\\') ?: $class, '\\');
+
         /** @var RepositoryInterface $repository */
         $repository = $class::repository();
-
-        // Active repository is not enabled
-        if (!$repository) {
-            return [];
-        }
 
         return $this->methodsStream($repository, $repository->queries(), $repository->queries()->builder())
             ->filter(function (ReflectionMethod $method) use($input) {
@@ -61,7 +58,7 @@ final class ModelMatcher extends AbstractMatcher
      */
     public function hasMatched(array $tokens)
     {
-        if (Model::locator() === null) {
+        if (!Model::isActiveRecordEnabled()) {
             return false;
         }
 

@@ -8,6 +8,8 @@ use Bdf\Prime\Shell\Util\QueryExtensionGetterTrait;
 
 /**
  * Caster for SQL queries
+ *
+ * @implements PrimeCasterInterface<SqlQueryInterface>
  */
 final class SqlQueryCaster implements PrimeCasterInterface
 {
@@ -52,7 +54,7 @@ final class SqlQueryCaster implements PrimeCasterInterface
         ]);
     }
 
-    private function clearRelations(array $relations)
+    private function clearRelations(array $relations): array
     {
         foreach ($relations as $name => $value) {
             $relations[$name] = array_filter($value);

@@ -37,7 +37,7 @@ final class QueryMatcher extends AbstractMatcher implements ContextAware
     /**
      * {@inheritdoc}
      */
-    public function setContext(Context $context)
+    public function setContext(Context $context): void
     {
         $this->resolver->setContext($context);
     }

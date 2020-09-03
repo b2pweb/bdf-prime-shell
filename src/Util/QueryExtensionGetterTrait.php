@@ -14,7 +14,7 @@ use ReflectionProperty;
 trait QueryExtensionGetterTrait
 {
     /**
-     * @var ReflectionProperty
+     * @var ReflectionProperty|null
      */
     private $extensionProperty;
 
@@ -22,10 +22,10 @@ trait QueryExtensionGetterTrait
     /**
      * Get the query extension from the query instance
      *
-     * @param CommandInterface $query
+     * @param CommandInterface|null $query
      * @return object|null
      */
-    private function getExtension(CommandInterface $query)
+    private function getExtension(?CommandInterface $query)
     {
         if (!$query instanceof AbstractReadCommand) {
             return null;
@@ -40,10 +40,11 @@ trait QueryExtensionGetterTrait
     }
 
     /**
-     * @param CommandInterface $query
-     * @return RepositoryInterface
+     * @param CommandInterface|null $query
+     *
+     * @return RepositoryInterface|null
      */
-    private function getExtensionRepository(CommandInterface $query): ?RepositoryInterface
+    private function getExtensionRepository(?CommandInterface $query): ?RepositoryInterface
     {
         if (!($extension = $this->getExtension($query)) instanceof QueryRepositoryExtension) {
             return null;

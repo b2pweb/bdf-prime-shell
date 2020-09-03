@@ -40,7 +40,7 @@ final class QueryColumnMatcher extends AbstractMatcher implements ContextAware
     /**
      * {@inheritdoc}
      */
-    public function setContext(Context $context)
+    public function setContext(Context $context): void
     {
         $this->resolver->setContext($context);
     }
@@ -57,6 +57,10 @@ final class QueryColumnMatcher extends AbstractMatcher implements ContextAware
         $quote = $parsed['quote'];
 
         $repository = $this->getExtensionRepository($query);
+
+        if (!$repository) {
+            return [];
+        }
 
         return Streams::wrap($this->getAllAttributes($repository))
             ->distinct()
@@ -78,6 +82,13 @@ final class QueryColumnMatcher extends AbstractMatcher implements ContextAware
         return $this->checkMethod($parsed['query'], $parsed['method']);
     }
 
+    /**
+     * @param array<int, string|array> $tokens
+     * @return array{input: string, query: CommandInterface, method: string, quote: string}|null
+     * @psalm-ignore-nullable-return
+     * @psalm-suppress MoreSpecificReturnType
+     * @psalm-suppress LessSpecificReturnStatement
+     */
     private function parseTokens(array $tokens): ?array
     {
         $hasOpenQuote = false;
@@ -125,7 +136,7 @@ final class QueryColumnMatcher extends AbstractMatcher implements ContextAware
         }
 
         // Handle Entity::method("
-        if (!$buffer->is(T_DOUBLE_COLON) || Model::locator() === null) {
+        if (!$buffer->is(T_DOUBLE_COLON) || !Model::isActiveRecordEnabled()) {
             return null;
         }
 
@@ -190,6 +201,7 @@ final class QueryColumnMatcher extends AbstractMatcher implements ContextAware
         foreach ($repository->mapper()->relations() as $relation => $_) {
             $distant = $repository->relation($relation)->relationRepository();
 
+            /** @psalm-suppress DocblockTypeContradiction */
             if (!$distant) {
                 continue;
             }

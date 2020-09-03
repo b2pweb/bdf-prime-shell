@@ -15,15 +15,15 @@ trait StreamTrait
     /**
      * Create a stream of objects methods
      *
-     * @param object ...$objects
+     * @param object|null ...$objects
      *
      * @return StreamInterface
      */
     private function methodsStream(...$objects): StreamInterface
     {
         return Streams::wrap($objects)
-            ->filter(function ($object) { return $object !== null; })
-            ->flatMap(function ($object) { return (new ReflectionObject($object))->getMethods(ReflectionMethod::IS_PUBLIC); })
+            ->filter(/** @param object|null $object */function ($object) { return $object !== null; })
+            ->flatMap(/** @param object $object */function ($object) { return (new ReflectionObject($object))->getMethods(ReflectionMethod::IS_PUBLIC); })
             ->filter(function (ReflectionMethod $method) { return substr($method->getName(), 0, 2) !== '__'; /* Ignore magic methods */ })
         ;
     }

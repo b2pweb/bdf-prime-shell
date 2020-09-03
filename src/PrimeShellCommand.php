@@ -34,7 +34,7 @@ class PrimeShellCommand extends Command
     /**
      * {@inheritdoc}
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this->setDescription('Run the prime interactive shell');
     }
@@ -42,9 +42,11 @@ class PrimeShellCommand extends Command
     /**
      * {@inheritdoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $factory = new ShellFactory($this->locator);
         $factory->create()->run();
+
+        return 0;
     }
 }

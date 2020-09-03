@@ -25,12 +25,12 @@ final class QueryResolver implements ContextAware
     private $lastQuery;
 
     /**
-     * @var array
+     * @var array|null
      */
     private $lastTokens;
 
     /**
-     * @var Context
+     * @var Context|null
      */
     private $context;
 
@@ -38,7 +38,7 @@ final class QueryResolver implements ContextAware
     /**
      * {@inheritdoc}
      */
-    public function setContext(Context $context)
+    public function setContext(Context $context): void
     {
         $this->context = $context;
     }
@@ -204,7 +204,7 @@ final class QueryResolver implements ContextAware
     /**
      * Check if the static method call is a valid query factory method (i.e. MyEntity::builder())
      *
-     * @param string $modelClass The model class name
+     * @param class-string<Model> $modelClass The model class name
      * @param string $methodName The method name
      *
      * @return bool
@@ -230,7 +230,7 @@ final class QueryResolver implements ContextAware
             $availableMethods,
             array_map(
                 new Getter('getName'),
-                (new ReflectionObject($repository->builder()))->getMethods()
+                (new ReflectionObject($repository->queries()->builder()))->getMethods()
             )
         );
 

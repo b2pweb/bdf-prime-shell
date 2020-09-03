@@ -25,7 +25,7 @@ final class TokensBuffer
     /**
      * TokensBuffer constructor.
      *
-     * @param array $tokens
+     * @param array<int, string|array> $tokens
      */
     public function __construct(array $tokens)
     {
@@ -91,6 +91,7 @@ final class TokensBuffer
      * @param int $offset The token offset. Positive integer for next token, or negative for previous
      *
      * @return string|null The token string, or null if not found
+     * @psalm-ignore-nullable-return
      */
     public function asString(int $offset = 0): ?string
     {
@@ -223,7 +224,7 @@ final class TokensBuffer
     /**
      * Get all tokens
      *
-     * @return array
+     * @return array<int, string|array>
      */
     public function all(): array
     {
