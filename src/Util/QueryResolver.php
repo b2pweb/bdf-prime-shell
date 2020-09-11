@@ -270,7 +270,13 @@ final class QueryResolver implements ContextAware
      */
     private function disableRepositoryConnections(): array
     {
-        $this->prime->connections()->declareConnection('__tmp', 'sqlite::memory:');
+        if (method_exists($this->prime->connections(), 'declareConnection')) {
+            $this->prime->connections()->declareConnection('__tmp', 'sqlite::memory:');
+        } else {
+            // Legacy
+            /** @psalm-suppress InvalidScalarArgument */
+            $this->prime->connections()->addConnection('__tmp', 'sqlite::memory:');
+        }
 
         $lastConnections = [];
 
