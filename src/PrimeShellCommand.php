@@ -42,7 +42,7 @@ class PrimeShellCommand extends Command
     {
         $this
             ->setDescription('Run the prime interactive shell')
-            ->addOption('--preload', '-p', InputOption::VALUE_IS_ARRAY, 'Preload classes from given paths', [])
+            ->addOption('--preload', '-p', InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED, 'Preload classes from given paths', [])
         ;
     }
 
