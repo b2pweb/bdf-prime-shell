@@ -32,6 +32,7 @@ class PrimeCasters
         $this->prime = $prime;
 
         $this->register(new SqlQueryCaster($analyzerService));
+        $this->register(new KeyValueQueryCaster($analyzerService));
         $this->register(new EntityCaster($prime));
     }
 

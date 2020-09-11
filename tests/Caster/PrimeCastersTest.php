@@ -4,6 +4,7 @@ namespace Bdf\Prime\Shell\Caster;
 
 use Bdf\Prime\Analyzer\AnalyzerService;
 use Bdf\Prime\Entity\EntityInterface;
+use Bdf\Prime\Query\Custom\KeyValue\KeyValueQuery;
 use Bdf\Prime\Query\SqlQueryInterface;
 use Bdf\Prime\Shell\PrimeShellTestCase;
 
@@ -32,9 +33,10 @@ class PrimeCastersTest extends PrimeShellTestCase
     {
         $casters = $this->casters->all();
 
-        $this->assertEqualsCanonicalizing([EntityInterface::class, SqlQueryInterface::class], array_keys($casters));
+        $this->assertEqualsCanonicalizing([EntityInterface::class, SqlQueryInterface::class, KeyValueQuery::class], array_keys($casters));
         $this->assertInstanceOf(SqlQueryCaster::class, $casters[SqlQueryInterface::class]);
         $this->assertInstanceOf(EntityCaster::class, $casters[EntityInterface::class]);
+        $this->assertInstanceOf(KeyValueQueryCaster::class, $casters[KeyValueQuery::class]);
     }
 
     /**
