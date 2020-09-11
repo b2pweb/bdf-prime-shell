@@ -2,10 +2,12 @@
 
 namespace Bdf\Prime\Shell\Matcher;
 
+use Bdf\Collection\Stream\Streams;
 use Bdf\Prime\Entity\Model;
 use Bdf\Prime\Repository\RepositoryInterface;
 use Bdf\Prime\Shell\Util\StreamTrait;
 use Bdf\Prime\Shell\Util\TokensBuffer;
+use LogicException;
 use Psy\TabCompletion\Matcher\AbstractMatcher;
 use ReflectionMethod;
 
@@ -41,13 +43,29 @@ final class ModelMatcher extends AbstractMatcher
         /** @var RepositoryInterface $repository */
         $repository = $class::repository();
 
-        return $this->methodsStream($repository, $repository->queries(), $repository->queries()->builder())
+        $stream = $this->methodsStream($repository, $repository->queries(), $repository->queries()->builder())
             ->filter(function (ReflectionMethod $method) use($input) {
                 return self::startsWith($input, $method->getName());
             })
             ->map(function (ReflectionMethod $method) use($baseName) {
                 return $baseName.'::'.$method->getName().'('.($method->getNumberOfRequiredParameters() > 0 ? '' : ')');
             })
+        ;
+
+        try {
+            $scopes = $repository->mapper()->scopes();
+        } catch (LogicException $e) {
+            $scopes = [];
+        }
+
+        $scopesStream = Streams::wrap([$repository->mapper()->queries(), $scopes])
+            ->flatMap(function (array $value) { return array_keys($value); })
+            ->filter(function (string $name) use($input) { return self::startsWith($input, $name); })
+            ->map(function (string $name) use($baseName) { return $baseName.'::'.$name.'('; })
+        ;
+
+        return $stream
+            ->concat($scopesStream)
             ->distinct()
             ->toArray(false)
         ;

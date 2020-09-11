@@ -5,7 +5,9 @@ namespace Bdf\Prime\Shell\Util;
 use Bdf\Collection\Util\Functor\Transformer\Getter;
 use Bdf\Prime\Entity\Model;
 use Bdf\Prime\Query\CommandInterface;
+use Bdf\Prime\Repository\EntityRepository;
 use Bdf\Prime\Repository\RepositoryInterface;
+use Bdf\Prime\ServiceLocator;
 use Error;
 use InvalidArgumentException;
 use Psy\Context;
@@ -34,6 +36,21 @@ final class QueryResolver implements ContextAware
      */
     private $context;
 
+    /**
+     * @var ServiceLocator
+     */
+    private $prime;
+
+
+    /**
+     * QueryResolver constructor.
+     *
+     * @param ServiceLocator $prime
+     */
+    public function __construct(ServiceLocator $prime)
+    {
+        $this->prime = $prime;
+    }
 
     /**
      * {@inheritdoc}
@@ -184,6 +201,8 @@ final class QueryResolver implements ContextAware
             $buffer->next();
         }
 
+        $lastConnections = $this->disableRepositoryConnections();
+
         try {
             if ($this->context !== null) {
                 foreach ($this->context->getAll() as $varName => $value) {
@@ -198,6 +217,8 @@ final class QueryResolver implements ContextAware
             return eval("return $line;");
         } catch (Throwable $e) {
             return null;
+        } finally {
+            $this->resetRepositoryConnections($lastConnections);
         }
     }
 
@@ -231,9 +252,51 @@ final class QueryResolver implements ContextAware
             array_map(
                 new Getter('getName'),
                 (new ReflectionObject($repository->queries()->builder()))->getMethods()
-            )
+            ),
+            array_keys($repository->mapper()->queries())
         );
 
+        try {
+            $availableMethods = array_merge($availableMethods, array_keys($repository->mapper()->scopes()));
+        } catch (\LogicException $e) {
+            // No scopes : ignore
+        }
+
         return in_array($methodName, $availableMethods);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function disableRepositoryConnections(): array
+    {
+        $this->prime->connections()->declareConnection('__tmp', 'sqlite::memory:');
+
+        $lastConnections = [];
+
+        foreach ($this->prime->repositoryNames() as $repositoryName) {
+            $repository = $this->prime->repository($repositoryName);
+
+            if ($repository instanceof EntityRepository) {
+                $lastConnections[$repositoryName] = $repository->metadata()->connection;
+                $repository->on('__tmp');
+            }
+        }
+
+        return $lastConnections;
+    }
+
+    /**
+     * @param array<string, string> $lastConnections
+     */
+    private function resetRepositoryConnections(array $lastConnections): void
+    {
+        foreach ($lastConnections as $repository => $connectionName) {
+            /** @var EntityRepository $repository */
+            $repository = $this->prime->repository($repository);
+            $repository->on($connectionName);
+        }
+
+        $this->prime->connections()->removeConnection('__tmp');
     }
 }

@@ -2,6 +2,9 @@
 
 namespace Bdf\Prime\Shell\Caster;
 
+use Bdf\Prime\Analyzer\AnalyzerService;
+use Bdf\Prime\Analyzer\Query\SqlQueryAnalyzer;
+use Bdf\Prime\Query\Query;
 use Bdf\Prime\Shell\_files\TestEntity;
 use Bdf\Prime\Shell\PrimeShellTestCase;
 
@@ -22,7 +25,9 @@ class SqlQueryCasterTest extends PrimeShellTestCase
     {
         parent::setUp();
 
-        $this->caster = new SqlQueryCaster();
+        $this->caster = new SqlQueryCaster(new AnalyzerService([
+            Query::class => new SqlQueryAnalyzer($this->prime)
+        ]));
     }
 
     /**
@@ -33,7 +38,19 @@ class SqlQueryCasterTest extends PrimeShellTestCase
         $this->assertEquals([
             'SQL' => 'SELECT t0.* FROM test_entity t0',
             'entity' => TestEntity::class,
+            'analysis' => ['Optimisation: use Bdf\Prime\Shell\_files\TestEntity::keyValue() instead'],
         ], ($this->caster)(TestEntity::builder()));
+    }
+
+    /**
+     *
+     */
+    public function test_without_analysis_errors()
+    {
+        $this->assertEquals([
+            'SQL' => 'SELECT t0.* FROM test_entity t0 WHERE t0.id > 5',
+            'entity' => TestEntity::class,
+        ], ($this->caster)(TestEntity::where('id', '>', 5)));
     }
 
     /**
@@ -44,6 +61,7 @@ class SqlQueryCasterTest extends PrimeShellTestCase
         $this->assertEquals([
             'SQL' => 'SELECT t0.* FROM test_entity t0 INNER JOIN relation_entity t1 ON t1.id = t0.relation_id WHERE t0.id = 5 OR t1.name = \'Foo\'',
             'entity' => TestEntity::class,
+            'analysis' => ['OR not nested on field "relation.name". Consider wrap the condition into a nested where : $query->where(function($query) { ... })'],
         ], ($this->caster)(TestEntity::builder()->where('id', 5)->orWhere('relation.name', 'Foo')));
     }
 
@@ -59,6 +77,7 @@ class SqlQueryCasterTest extends PrimeShellTestCase
                 'attribute' => 'id',
                 'combine' => false,
             ],
+            'analysis' => ['Optimisation: use Bdf\Prime\Shell\_files\TestEntity::keyValue() instead'],
         ], ($this->caster)(TestEntity::by('id')));
     }
 
@@ -72,8 +91,10 @@ class SqlQueryCasterTest extends PrimeShellTestCase
             'entity' => TestEntity::class,
             'with' => [
                 'relation' => [],
+                'r2' => [],
             ],
-        ], ($this->caster)(TestEntity::with('relation')));
+            'analysis' => ['Optimisation: use Bdf\Prime\Shell\_files\TestEntity::keyValue() instead'],
+        ], ($this->caster)(TestEntity::with(['relation', 'r2'])));
     }
 
     /**
@@ -87,6 +108,7 @@ class SqlQueryCasterTest extends PrimeShellTestCase
             'without' => [
                 'relation' => [],
             ],
+            'analysis' => ['Optimisation: use Bdf\Prime\Shell\_files\TestEntity::keyValue() instead'],
         ], ($this->caster)(TestEntity::without('relation')));
     }
 }

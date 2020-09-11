@@ -6,6 +6,7 @@ use Bdf\Collection\Stream\Streams;
 use Bdf\Prime\Entity\Model;
 use Bdf\Prime\Query\CommandInterface;
 use Bdf\Prime\Repository\RepositoryInterface;
+use Bdf\Prime\ServiceLocator;
 use Bdf\Prime\Shell\Util\QueryExtensionGetterTrait;
 use Bdf\Prime\Shell\Util\QueryResolver;
 use Bdf\Prime\Shell\Util\StreamTrait;
@@ -31,10 +32,12 @@ final class QueryColumnMatcher extends AbstractMatcher implements ContextAware
 
     /**
      * QueryColumnMatcher constructor.
+     *
+     * @param ServiceLocator $prime
      */
-    public function __construct()
+    public function __construct(ServiceLocator $prime)
     {
-        $this->resolver = new QueryResolver();
+        $this->resolver = new QueryResolver($prime);
     }
 
     /**

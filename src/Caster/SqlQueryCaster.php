@@ -2,19 +2,16 @@
 
 namespace Bdf\Prime\Shell\Caster;
 
-use Bdf\Prime\Query\QueryRepositoryExtension;
+use Bdf\Prime\Query\CommandInterface;
 use Bdf\Prime\Query\SqlQueryInterface;
-use Bdf\Prime\Shell\Util\QueryExtensionGetterTrait;
 
 /**
  * Caster for SQL queries
  *
- * @implements PrimeCasterInterface<SqlQueryInterface>
+ * @extends AbstractQueryCaster<SqlQueryInterface>
  */
-final class SqlQueryCaster implements PrimeCasterInterface
+final class SqlQueryCaster extends AbstractQueryCaster
 {
-    use QueryExtensionGetterTrait;
-
     /**
      * {@inheritdoc}
      */
@@ -26,40 +23,10 @@ final class SqlQueryCaster implements PrimeCasterInterface
     /**
      * {@inheritdoc}
      *
-     * @param SqlQueryInterface $object
+     * @param SqlQueryInterface $query
      */
-    public function __invoke($object): array
+    protected function dumpQuery(CommandInterface $query): array
     {
-        $out = ['SQL' => $object->toRawSql()];
-        $out += $this->dumpExtension($object);
-
-        return $out;
-    }
-
-    private function dumpExtension(SqlQueryInterface $query): array
-    {
-        $extension = $this->getExtension($query);
-
-        if (!$extension instanceof QueryRepositoryExtension) {
-            return [];
-        }
-
-        $extension = (array) $extension;
-
-        return array_filter([
-            'entity' => $extension["\0*\0metadata"]->entityName,
-            'with' => $this->clearRelations($extension["\0*\0withRelations"]),
-            'without' => $this->clearRelations($extension["\0*\0withoutRelations"]),
-            'by' => $extension["\0*\0byOptions"],
-        ]);
-    }
-
-    private function clearRelations(array $relations): array
-    {
-        foreach ($relations as $name => $value) {
-            $relations[$name] = array_filter($value);
-        }
-
-        return $relations;
+        return ['SQL' => $query->toRawSql()];
     }
 }

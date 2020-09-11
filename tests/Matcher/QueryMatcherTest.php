@@ -23,7 +23,7 @@ class QueryMatcherTest extends PrimeShellTestCase
     {
         parent::setUp();
 
-        $this->matcher = new QueryMatcher();
+        $this->matcher = new QueryMatcher($this->prime);
     }
 
     /**
@@ -66,6 +66,7 @@ class QueryMatcherTest extends PrimeShellTestCase
         $this->assertContains('toSql()', $matches);
         $this->assertContains('count()', $matches);
         $this->assertContains('by(', $matches);
+        $this->assertContains('myScope(', $matches);
 
         $this->assertNotContains('__toString()', $matches);
     }
@@ -88,6 +89,7 @@ class QueryMatcherTest extends PrimeShellTestCase
         $this->assertContains('toSql()', $matches);
         $this->assertContains('count()', $matches);
         $this->assertContains('by(', $matches);
+        $this->assertContains('myScope(', $matches);
 
         $this->assertNotContains('__toString()', $matches);
     }
@@ -102,5 +104,7 @@ class QueryMatcherTest extends PrimeShellTestCase
             'orWhere(', 'orWhereNotNull(', 'orWhereNull(', 'orWhereRaw(',
             'order(',
         ], $this->matcher->getMatches($this->tokens(TestEntity::class.'::where("id", 5)->or')));
+        $this->assertEquals(['myScope('], $this->matcher->getMatches($this->tokens(TestEntity::class.'::where("id", 5)->my')));
+        $this->assertEmpty($this->matcher->getMatches($this->tokens(TestEntity::class.'::where("id", 5)->notFound')));
     }
 }

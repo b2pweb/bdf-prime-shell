@@ -4,6 +4,7 @@ namespace Bdf\Prime\Shell\_files;
 
 use Bdf\Prime\Mapper\Builder\FieldBuilder;
 use Bdf\Prime\Mapper\Mapper;
+use Bdf\Prime\Repository\EntityRepository;
 
 class TestEntityMapper extends Mapper
 {
@@ -29,5 +30,28 @@ class TestEntityMapper extends Mapper
     public function buildRelations($builder)
     {
         $builder->on('relation')->belongsTo(RelationEntity::class, 'relation.id');
+        $builder->on('r2')->belongsTo(TestEntity::class, 'value');
+    }
+
+    public function scopes()
+    {
+        return [
+            'myScope' => function ($query, $value) {
+                return $query->where('value', ':like', '%'.$value.'%');
+            }
+        ];
+    }
+
+    public function queries()
+    {
+        return [
+            'myQuery' => function ($repository, $value) {
+                return $repository->keyValue('value', $value);
+            },
+
+            'dangerousQuery' => function (EntityRepository $repository) {
+                $repository->schema()->drop();
+            },
+        ];
     }
 }

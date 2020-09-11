@@ -2,6 +2,7 @@
 
 namespace Bdf\Prime\Shell\Util;
 
+use Bdf\Prime\Shell\_files\RelationEntity;
 use Bdf\Prime\Shell\_files\TestEntity;
 use Bdf\Prime\Shell\PrimeShellTestCase;
 use Doctrine\DBAL\Logging\DebugStack;
@@ -29,7 +30,7 @@ class QueryResolverTest extends PrimeShellTestCase
      */
     public function test_invalid_queries()
     {
-        $resolver = new QueryResolver();
+        $resolver = new QueryResolver($this->prime);
 
         $this->assertNull($resolver->resolve(new TokensBuffer($this->tokens('InvalidClass::builder()->where("foo", "bar")'))));
         $this->assertNull($resolver->resolve(new TokensBuffer($this->tokens(TestEntity::class.'::class'))));
@@ -64,38 +65,72 @@ class QueryResolverTest extends PrimeShellTestCase
     /**
      *
      */
+    public function test_dangerous_query_not_executed()
+    {
+        $entity = (new TestEntity())->setValue('foo');
+        TestEntity::repository()->schema()->migrate();
+        $entity->insert();
+
+        $resolver = new QueryResolver($this->prime);
+        $this->assertNull($resolver->resolve(new TokensBuffer($this->tokens(TestEntity::class.'::dangerousQuery()'))));
+
+        $this->assertEquals($entity, TestEntity::refresh($entity));
+    }
+
+    /**
+     *
+     */
     public function test_resolve_valid_query()
     {
-        $resolver = new QueryResolver();
+        $resolver = new QueryResolver($this->prime);
+
+        $this->assertEquals('__tmp', $resolver->resolve(new TokensBuffer($this->tokens(TestEntity::class.'::builder()')))->connection()->getName());
+        $this->assertNotContains('__tmp', $this->prime->connections()->getCurrentConnectionNames());
 
         $this->assertEquals(
-            TestEntity::builder(),
-            $resolver->resolve(new TokensBuffer($this->tokens(TestEntity::class.'::builder()')))
+            TestEntity::builder()->statements,
+            $resolver->resolve(new TokensBuffer($this->tokens(TestEntity::class.'::builder()')))->statements
+        );
+
+
+        $this->assertEquals(
+            RelationEntity::builder()->statements,
+            $resolver->resolve(new TokensBuffer($this->tokens(RelationEntity::class.'::builder()')))->statements
         );
 
         $this->assertEquals(
-            TestEntity::builder(),
-            $resolver->resolve((new TokensBuffer($this->tokens(TestEntity::class.'::builder()')))->reverse())
+            TestEntity::builder()->statements,
+            $resolver->resolve((new TokensBuffer($this->tokens(TestEntity::class.'::builder()')))->reverse())->statements
         );
 
         $this->assertEquals(
-            TestEntity::where('foo', 'bar'),
-            $resolver->resolve(new TokensBuffer($this->tokens(TestEntity::class.'::where("foo", "bar")')))
+            TestEntity::where('foo', 'bar')->statements,
+            $resolver->resolve(new TokensBuffer($this->tokens(TestEntity::class.'::where("foo", "bar")')))->statements
         );
 
         $this->assertEquals(
-            TestEntity::where('foo', 'bar'),
-            $resolver->resolve(new TokensBuffer($this->tokens(TestEntity::class.'::repository()->where("foo", "bar")')))
+            TestEntity::where('foo', 'bar')->statements,
+            $resolver->resolve(new TokensBuffer($this->tokens(TestEntity::class.'::repository()->where("foo", "bar")')))->statements
         );
 
         $this->assertEquals(
-            TestEntity::where('foo', 'bar')->orWhere("aaa", "bbb"),
-            $resolver->resolve(new TokensBuffer($this->tokens(TestEntity::class.'::repository()->where("foo", "bar")->orWhere("aaa", "bbb")')))
+            TestEntity::where('foo', 'bar')->orWhere("aaa", "bbb")->statements,
+            $resolver->resolve(new TokensBuffer($this->tokens(TestEntity::class.'::repository()->where("foo", "bar")->orWhere("aaa", "bbb")')))->statements
         );
 
         $this->assertEquals(
-            TestEntity::distinct()->where('foo', 'bar'),
-            $resolver->resolve(new TokensBuffer($this->tokens(TestEntity::class.'::distinct()->where("foo", "bar")')))
+            TestEntity::distinct()->where('foo', 'bar')->statements,
+            $resolver->resolve(new TokensBuffer($this->tokens(TestEntity::class.'::distinct()->where("foo", "bar")')))->statements
+        );
+
+        $this->assertEquals(
+            TestEntity::where('value', ':like', '%foo%')->statements,
+            $resolver->resolve(new TokensBuffer($this->tokens(TestEntity::class.'::myScope("foo")')))->statements
+        );
+
+        $this->assertEquals(
+            TestEntity::keyValue('value', 'foo')->statements,
+            $resolver->resolve(new TokensBuffer($this->tokens(TestEntity::class.'::myQuery("foo")')))->statements
         );
 
         $this->assertEmpty($this->logger->queries);
@@ -106,7 +141,7 @@ class QueryResolverTest extends PrimeShellTestCase
      */
     public function test_query_cache()
     {
-        $resolver = new QueryResolver();
+        $resolver = new QueryResolver($this->prime);
 
         $this->assertSame(
             $query = $resolver->resolve(new TokensBuffer($this->tokens(TestEntity::class.'::builder()'))),
@@ -122,7 +157,7 @@ class QueryResolverTest extends PrimeShellTestCase
     public function test_resolve_with_variable()
     {
         $context = new Context();
-        $resolver = new QueryResolver();
+        $resolver = new QueryResolver($this->prime);
         $resolver->setContext($context);
 
         $context->setAll(['query' => $query = TestEntity::builder()]);
@@ -139,7 +174,7 @@ class QueryResolverTest extends PrimeShellTestCase
     public function test_resolve_fail_with_variable()
     {
         $context = new Context();
-        $resolver = new QueryResolver();
+        $resolver = new QueryResolver($this->prime);
         $resolver->setContext($context);
 
         $this->assertNull($resolver->resolve(new TokensBuffer($this->tokens('$query->where("foo","bar")'))));

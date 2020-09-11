@@ -1,6 +1,6 @@
 {
     "name": "b2p/bdf-prime-shell",
-    "description": "Bdf prime MongoDB component",
+    "description": "Interactive shell for prime queries",
     "type": "library",
     "license": "proprietary",
     "config": {
@@ -26,6 +26,7 @@
     "require": {
         "php": ">=7.1",
         "b2p/bdf-prime": "~1.6",
+        "b2p/bdf-prime-analyzer": "dev-master",
         "symfony/console": "~4.0",
         "psy/psysh": "~0.10",
         "b2pweb/bdf-collections": "~1.1"

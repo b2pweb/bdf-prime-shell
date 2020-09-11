@@ -2,6 +2,8 @@
 
 namespace Bdf\Prime\Shell\Matcher;
 
+use Bdf\Collection\Stream\Streams;
+use Bdf\Prime\ServiceLocator;
 use Bdf\Prime\Shell\Util\QueryExtensionGetterTrait;
 use Bdf\Prime\Shell\Util\QueryResolver;
 use Bdf\Prime\Shell\Util\StreamTrait;
@@ -28,10 +30,12 @@ final class QueryMatcher extends AbstractMatcher implements ContextAware
 
     /**
      * QueryMatcher constructor.
+     *
+     * @param ServiceLocator $prime
      */
-    public function __construct()
+    public function __construct(ServiceLocator $prime)
     {
-        $this->resolver = new QueryResolver();
+        $this->resolver = new QueryResolver($prime);
     }
 
     /**
@@ -56,13 +60,29 @@ final class QueryMatcher extends AbstractMatcher implements ContextAware
 
         $query = $this->resolver->resolve(new TokensBuffer($tokens));
 
-        return $this->methodsStream($query, $this->getExtension($query))
+        $stream = $this->methodsStream($query, $this->getExtension($query))
             ->filter(function (\ReflectionMethod $method) use($input) {
                 return self::startsWith($input, $method->getName());
             })
             ->map(function (ReflectionMethod $method) {
                 return $method->getName().'('.($method->getNumberOfRequiredParameters() > 0 ? '' : ')');
             })
+        ;
+
+        try {
+            if ($repository = $this->getExtensionRepository($query)) {
+                $scopes = Streams::wrap(array_keys($repository->mapper()->scopes()))
+                    ->filter(function (string $name) use ($input) { return self::startsWith($input, $name); })
+                    ->map(function (string $name) { return $name . '('; })
+                ;
+
+                $stream = $stream->concat($scopes);
+            }
+        } catch (\LogicException $e) {
+            // No scopes defined : Ignore
+        }
+
+        return $stream
             ->distinct()
             ->toArray(false)
         ;

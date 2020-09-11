@@ -2,6 +2,7 @@
 
 namespace Bdf\Prime\Shell\Caster;
 
+use Bdf\Prime\Analyzer\AnalyzerService;
 use Bdf\Prime\ServiceLocator;
 
 /**
@@ -22,13 +23,15 @@ class PrimeCasters
 
     /**
      * PrimeCasters constructor.
+     *
      * @param ServiceLocator $prime
+     * @param AnalyzerService $analyzerService
      */
-    public function __construct(ServiceLocator $prime)
+    public function __construct(ServiceLocator $prime, AnalyzerService $analyzerService)
     {
         $this->prime = $prime;
 
-        $this->register(new SqlQueryCaster());
+        $this->register(new SqlQueryCaster($analyzerService));
         $this->register(new EntityCaster($prime));
     }
 

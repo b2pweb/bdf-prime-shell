@@ -3,6 +3,7 @@
 namespace Bdf\Prime\Shell\Matcher;
 
 use Bdf\Prime\Entity\Model;
+use Bdf\Prime\Shell\_files\RelationEntity;
 use Bdf\Prime\Shell\_files\TestEntity;
 use Bdf\Prime\Shell\PrimeShellTestCase;
 
@@ -58,8 +59,12 @@ class ModelMatcherTest extends PrimeShellTestCase
         $this->assertContains('TestEntity::connection()', $matches);
         $this->assertContains('TestEntity::count()', $matches);
         $this->assertContains('TestEntity::loaded(', $matches);
+        $this->assertContains('TestEntity::myScope(', $matches);
+        $this->assertContains('TestEntity::myQuery(', $matches);
         $this->assertNotContains('TestEntity::__construct(', $matches);
         $this->assertNotContains('TestEntity::__toString()', $matches);
+
+        $this->assertContains('RelationEntity::keyValue()', $this->matcher->getMatches($this->tokens(RelationEntity::class.'::')));
     }
 
     /**
@@ -73,5 +78,12 @@ class ModelMatcherTest extends PrimeShellTestCase
             'TestEntity::whereNotNull(',
             'TestEntity::whereRaw(',
         ], $this->matcher->getMatches($this->tokens(TestEntity::class.'::whe')));
+
+        $this->assertEqualsCanonicalizing([
+            'TestEntity::myScope(',
+            'TestEntity::myQuery(',
+        ], $this->matcher->getMatches($this->tokens(TestEntity::class.'::my')));
+
+        $this->assertEmpty($this->matcher->getMatches($this->tokens(TestEntity::class.'::notFound')));
     }
 }

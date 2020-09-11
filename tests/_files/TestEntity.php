@@ -25,6 +25,11 @@ class TestEntity extends Model implements InitializableInterface
      */
     private $relation;
 
+    /**
+     * @var TestEntity
+     */
+    private $r2;
+
     public function __construct(array $data = [])
     {
         $this->initialize();
@@ -87,6 +92,24 @@ class TestEntity extends Model implements InitializableInterface
     public function setRelation(RelationEntity $relation): TestEntity
     {
         $this->relation = $relation;
+        return $this;
+    }
+
+    /**
+     * @return TestEntity
+     */
+    public function r2(): TestEntity
+    {
+        return $this->r2;
+    }
+
+    /**
+     * @param TestEntity $r2
+     * @return TestEntity
+     */
+    public function setR2(TestEntity $r2): TestEntity
+    {
+        $this->r2 = $r2;
         return $this;
     }
 }

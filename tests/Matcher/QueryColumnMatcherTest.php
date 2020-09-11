@@ -21,7 +21,7 @@ class QueryColumnMatcherTest extends PrimeShellTestCase
     {
         parent::setUp();
 
-        $this->matcher = new QueryColumnMatcher();
+        $this->matcher = new QueryColumnMatcher($this->prime);
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace Bdf\Prime\Shell\Caster;
 
+use Bdf\Prime\Analyzer\AnalyzerService;
 use Bdf\Prime\Entity\EntityInterface;
 use Bdf\Prime\Query\SqlQueryInterface;
 use Bdf\Prime\Shell\PrimeShellTestCase;
@@ -21,7 +22,7 @@ class PrimeCastersTest extends PrimeShellTestCase
     {
         parent::setUp();
 
-        $this->casters = new PrimeCasters($this->prime);
+        $this->casters = new PrimeCasters($this->prime, new AnalyzerService([]));
     }
 
     /**
