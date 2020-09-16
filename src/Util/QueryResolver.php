@@ -267,6 +267,9 @@ final class QueryResolver implements ContextAware
 
     /**
      * @return array<string, string>
+     *
+     * @psalm-suppress InvalidScalarArgument
+     * @psalm-suppress InvalidArgument
      */
     private function disableRepositoryConnections(): array
     {
@@ -274,7 +277,6 @@ final class QueryResolver implements ContextAware
             $this->prime->connections()->declareConnection('__tmp', 'sqlite::memory:');
         } else {
             // Legacy
-            /** @psalm-suppress InvalidScalarArgument */
             $this->prime->connections()->addConnection('__tmp', 'sqlite::memory:');
         }
 
