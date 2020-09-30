@@ -27,7 +27,7 @@
         "php": ">=7.1",
         "b2p/bdf-prime": "~1.6",
         "b2p/bdf-prime-analyzer": "dev-master",
-        "symfony/console": "~4.0",
+        "symfony/console": "~4.0 || ~5.0",
         "psy/psysh": "~0.10",
         "b2pweb/bdf-collections": "~1.1",
         "b2pweb/bdf-util": "~1.0"
