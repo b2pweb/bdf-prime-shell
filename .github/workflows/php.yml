@@ -77,4 +77,4 @@ jobs:
     - name: Run Infection
       run: |
         git fetch --depth=1 origin $GITHUB_BASE_REF
-        ~/.composer/vendor/bin/infection --logger-github --git-diff-filter=AM
+        ~/.composer/vendor/bin/infection --logger-github --git-diff-filter=AM --skip-initial-tests
