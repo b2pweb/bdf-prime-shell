@@ -6,6 +6,7 @@
          convertWarningsToExceptions="true"
          processIsolation="false"
          stopOnFailure="false"
+         executionOrder="default" resolveDependencies="true"
 >
     <php>
         <ini name="error_reporting" value="-1" />
