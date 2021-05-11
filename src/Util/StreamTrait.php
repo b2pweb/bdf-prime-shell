@@ -22,8 +22,8 @@ trait StreamTrait
     private function methodsStream(...$objects): StreamInterface
     {
         return Streams::wrap($objects)
-            ->filter(/** @param object|null $object */function ($object) { return $object !== null; })
-            ->flatMap(/** @param object $object */function ($object) { return (new ReflectionObject($object))->getMethods(ReflectionMethod::IS_PUBLIC); })
+            ->filter(function ($object) { return $object !== null; })
+            ->flatMap(/** @psalm-suppress PossiblyNullArgument */function ($object) { return (new ReflectionObject($object))->getMethods(ReflectionMethod::IS_PUBLIC); })
             ->filter(function (ReflectionMethod $method) { return substr($method->getName(), 0, 2) !== '__'; /* Ignore magic methods */ })
         ;
     }

@@ -48,6 +48,8 @@ class ShellFactory
 
         $config->useTabCompletion();
         $config->addMatchers([new ModelMatcher(), new QueryMatcher($this->locator), new QueryColumnMatcher($this->locator)]);
+        /** @psalm-suppress InvalidArgument */
+        // psalm class-string-map does not works
         $config->addCasters(
             (new PrimeCasters($this->locator, new AnalyzerService([
                 Query::class => new SqlQueryAnalyzer($this->locator),
