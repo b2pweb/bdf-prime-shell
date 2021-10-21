@@ -12,7 +12,7 @@ class EntityCasterTest extends PrimeShellTestCase
      */
     private $caster;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 

@@ -24,7 +24,7 @@ class KeyValueQueryCasterTest extends PrimeShellTestCase
     /**
      *
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -38,7 +38,7 @@ class KeyValueQueryCasterTest extends PrimeShellTestCase
     /**
      *
      */
-    protected function tearDown()
+    protected function tearDown(): void
     {
         Prime::drop(TestEntity::class);
         parent::tearDown();

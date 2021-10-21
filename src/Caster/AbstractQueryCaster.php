@@ -85,6 +85,7 @@ abstract class AbstractQueryCaster implements PrimeCasterInterface
 
     private function dumpAnalysis(CommandInterface $query): array
     {
+        /** @psalm-suppress RedundantCondition */
         if (!$query instanceof CompilableClause) {
             return [];
         }

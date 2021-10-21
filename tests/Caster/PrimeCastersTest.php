@@ -19,7 +19,7 @@ class PrimeCastersTest extends PrimeShellTestCase
      */
     private $casters;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 

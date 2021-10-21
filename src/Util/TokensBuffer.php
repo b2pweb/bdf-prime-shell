@@ -175,7 +175,7 @@ final class TokensBuffer
     {
         $className = '';
 
-        while ($this->is(T_STRING) || $this->is(T_NS_SEPARATOR)) {
+        while ($this->is(T_STRING) || $this->is(T_NS_SEPARATOR) || (PHP_MAJOR_VERSION >= 8 && defined('T_NAME_QUALIFIED') && $this->is(T_NAME_QUALIFIED))) {
             if ($this->direction === 1) {
                 $className .= $this->asString();
             } else {

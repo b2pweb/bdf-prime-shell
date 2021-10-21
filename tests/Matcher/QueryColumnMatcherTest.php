@@ -17,7 +17,7 @@ class QueryColumnMatcherTest extends PrimeShellTestCase
     /**
      *
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 

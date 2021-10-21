@@ -238,10 +238,12 @@ final class QueryResolver implements ContextAware
     /**
      * Check if the repository method is valid for create a query
      *
-     * @param RepositoryInterface $repository
+     * @param RepositoryInterface<T> $repository
      * @param string $methodName The method name
      *
      * @return bool
+     *
+     * @template T as object
      */
     private function checkRepositoryMethodCall(RepositoryInterface $repository, string $methodName): bool
     {
@@ -266,7 +268,7 @@ final class QueryResolver implements ContextAware
     }
 
     /**
-     * @return array<string, string>
+     * @return array<class-string<RepositoryInterface>, string>
      *
      * @psalm-suppress InvalidScalarArgument
      * @psalm-suppress InvalidArgument
@@ -295,7 +297,7 @@ final class QueryResolver implements ContextAware
     }
 
     /**
-     * @param array<string, string> $lastConnections
+     * @param array<class-string<RepositoryInterface>, string> $lastConnections
      */
     private function resetRepositoryConnections(array $lastConnections): void
     {
