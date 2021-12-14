@@ -49,7 +49,7 @@ final class QueryMatcher extends AbstractMatcher implements ContextAware
     /**
      * {@inheritdoc}
      */
-    public function getMatches(array $tokens, array $info = [])
+    public function getMatches(array $tokens, array $info = []): array
     {
         $input = '';
 
@@ -91,7 +91,7 @@ final class QueryMatcher extends AbstractMatcher implements ContextAware
     /**
      * {@inheritdoc}
      */
-    public function hasMatched(array $tokens)
+    public function hasMatched(array $tokens): bool
     {
         $buffer = new TokensBuffer($tokens);
         $buffer->reverse();

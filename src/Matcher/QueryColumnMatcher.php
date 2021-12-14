@@ -51,7 +51,7 @@ final class QueryColumnMatcher extends AbstractMatcher implements ContextAware
     /**
      * {@inheritdoc}
      */
-    public function getMatches(array $tokens, array $info = [])
+    public function getMatches(array $tokens, array $info = []): array
     {
         $parsed = $this->parseTokens($tokens);
 
@@ -76,7 +76,7 @@ final class QueryColumnMatcher extends AbstractMatcher implements ContextAware
     /**
      * {@inheritdoc}
      */
-    public function hasMatched(array $tokens)
+    public function hasMatched(array $tokens): bool
     {
         if (($parsed = $this->parseTokens($tokens)) === null) {
             return false;

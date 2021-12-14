@@ -21,7 +21,7 @@ final class ModelMatcher extends AbstractMatcher
     /**
      * {@inheritdoc}
      */
-    public function getMatches(array $tokens, array $info = [])
+    public function getMatches(array $tokens, array $info = []): array
     {
         $buffer = new TokensBuffer($tokens);
         $buffer->reverse();
@@ -74,7 +74,7 @@ final class ModelMatcher extends AbstractMatcher
     /**
      * {@inheritdoc}
      */
-    public function hasMatched(array $tokens)
+    public function hasMatched(array $tokens): bool
     {
         if (!Model::isActiveRecordEnabled()) {
             return false;
