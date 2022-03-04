@@ -6,7 +6,7 @@ use Bdf\Prime\Mapper\Mapper;
 
 class RelationEntityMapper extends Mapper
 {
-    public function schema()
+    public function schema(): array
     {
         return [
             'connection' => 'test',
@@ -14,7 +14,7 @@ class RelationEntityMapper extends Mapper
         ];
     }
 
-    public function buildFields($builder)
+    public function buildFields($builder): void
     {
         $builder
             ->integer('id')->autoincrement()
@@ -22,7 +22,7 @@ class RelationEntityMapper extends Mapper
         ;
     }
 
-    public function buildRelations($builder)
+    public function buildRelations($builder): void
     {
         $builder->on('entity')
             ->hasMany(TestEntity::class.'::relation.id')

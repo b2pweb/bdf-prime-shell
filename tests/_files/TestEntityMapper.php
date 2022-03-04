@@ -8,7 +8,7 @@ use Bdf\Prime\Repository\EntityRepository;
 
 class TestEntityMapper extends Mapper
 {
-    public function schema()
+    public function schema(): array
     {
         return [
             'connection' => 'test',
@@ -16,7 +16,7 @@ class TestEntityMapper extends Mapper
         ];
     }
 
-    public function buildFields($builder)
+    public function buildFields($builder): void
     {
         $builder
             ->integer('id')->autoincrement()
@@ -27,13 +27,13 @@ class TestEntityMapper extends Mapper
         ;
     }
 
-    public function buildRelations($builder)
+    public function buildRelations($builder): void
     {
         $builder->on('relation')->belongsTo(RelationEntity::class, 'relation.id');
         $builder->on('r2')->belongsTo(TestEntity::class, 'value');
     }
 
-    public function scopes()
+    public function scopes(): array
     {
         return [
             'myScope' => function ($query, $value) {
@@ -42,7 +42,7 @@ class TestEntityMapper extends Mapper
         ];
     }
 
-    public function queries()
+    public function queries(): array
     {
         return [
             'myQuery' => function ($repository, $value) {

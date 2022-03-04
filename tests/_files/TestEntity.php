@@ -36,7 +36,7 @@ class TestEntity extends Model implements InitializableInterface
         $this->import($data);
     }
 
-    public function initialize()
+    public function initialize(): void
     {
         $this->relation = new RelationEntity();
     }
