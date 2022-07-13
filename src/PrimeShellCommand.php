@@ -6,6 +6,7 @@ use Bdf\Collection\Stream\Streams;
 use Bdf\Collection\Util\Functor\Transformer\Getter;
 use Bdf\Prime\ServiceLocator;
 use Bdf\Util\File\ClassFileLocator;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -14,6 +15,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Command for display the prime shell
  */
+#[AsCommand('prime:shell', 'Run the prime interactive shell')]
 class PrimeShellCommand extends Command
 {
     protected static $defaultName = 'prime:shell';
