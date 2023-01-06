@@ -46,7 +46,7 @@ class ShellFactory
     {
         $config = new Configuration();
 
-        $config->useTabCompletion();
+        $config->setUseTabCompletion(true);
         $config->addMatchers([new ModelMatcher(), new QueryMatcher($this->locator), new QueryColumnMatcher($this->locator)]);
         /** @psalm-suppress InvalidArgument */
         // psalm class-string-map does not works
