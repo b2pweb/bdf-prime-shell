@@ -73,6 +73,9 @@ final class ModelMatcher extends AbstractMatcher
 
     /**
      * {@inheritdoc}
+     *
+     * @psalm-suppress ImplementedReturnTypeMismatch
+     * @return bool
      */
     public function hasMatched(array $tokens): bool
     {

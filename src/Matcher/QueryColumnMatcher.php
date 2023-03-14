@@ -75,6 +75,9 @@ final class QueryColumnMatcher extends AbstractMatcher implements ContextAware
 
     /**
      * {@inheritdoc}
+     *
+     * @psalm-suppress ImplementedReturnTypeMismatch
+     * @return bool
      */
     public function hasMatched(array $tokens): bool
     {
