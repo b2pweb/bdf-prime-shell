@@ -3,6 +3,7 @@
 namespace Bdf\Prime\Shell\Matcher;
 
 use Bdf\Prime\Entity\Model;
+use Bdf\Prime\Query\Query;
 use Bdf\Prime\Shell\_files\RelationEntity;
 use Bdf\Prime\Shell\_files\TestEntity;
 use Bdf\Prime\Shell\PrimeShellTestCase;
@@ -72,12 +73,18 @@ class ModelMatcherTest extends PrimeShellTestCase
      */
     public function test_getMatches_with_filter()
     {
-        $this->assertEqualsCanonicalizing([
+        $expecting = [
             'TestEntity::where(',
             'TestEntity::whereNull(',
             'TestEntity::whereNotNull(',
             'TestEntity::whereRaw(',
-        ], $this->matcher->getMatches($this->tokens(TestEntity::class.'::whe')));
+        ];
+
+        if (method_exists(Query::class, 'whereReplace')) {
+            $expecting[] = 'TestEntity::whereReplace(';
+        }
+
+        $this->assertEqualsCanonicalizing($expecting, $this->matcher->getMatches($this->tokens(TestEntity::class.'::whe')));
 
         $this->assertEqualsCanonicalizing([
             'TestEntity::myScope(',
