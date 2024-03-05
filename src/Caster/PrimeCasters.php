@@ -11,11 +11,6 @@ use Bdf\Prime\ServiceLocator;
 class PrimeCasters
 {
     /**
-     * @var ServiceLocator
-     */
-    private $prime;
-
-    /**
      * @var PrimeCasterInterface[]
      */
     private $casters = [];
@@ -29,8 +24,6 @@ class PrimeCasters
      */
     public function __construct(ServiceLocator $prime, AnalyzerService $analyzerService)
     {
-        $this->prime = $prime;
-
         $this->register(new SqlQueryCaster($analyzerService));
         $this->register(new KeyValueQueryCaster($analyzerService));
         $this->register(new EntityCaster($prime));

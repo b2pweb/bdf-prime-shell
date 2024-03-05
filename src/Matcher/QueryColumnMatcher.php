@@ -205,10 +205,15 @@ final class QueryColumnMatcher extends AbstractMatcher implements ContextAware
         }
 
         foreach ($repository->mapper()->relations() as $relation => $_) {
-            $distant = $repository->relation($relation)->relationRepository();
+            try {
+                $distant = $repository->relation($relation)->relationRepository();
+            } catch (\Exception $e) {
+                // In case of NullRelation
+                continue;
+            }
 
-            /** @psalm-suppress DocblockTypeContradiction */
-            if (!$distant) {
+            /** @psalm-suppress TypeDoesNotContainNull For prime < 1.3, this value may be null. Remove when compatibility with prime 1 is dropped */
+            if ($distant === null) {
                 continue;
             }
 

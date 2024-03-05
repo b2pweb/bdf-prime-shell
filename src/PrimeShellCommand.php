@@ -14,6 +14,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Command for display the prime shell
+ *
+ * @api
  */
 #[AsCommand('prime:shell', 'Run the prime interactive shell')]
 class PrimeShellCommand extends Command

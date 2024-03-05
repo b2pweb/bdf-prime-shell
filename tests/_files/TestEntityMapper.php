@@ -31,6 +31,7 @@ class TestEntityMapper extends Mapper
     {
         $builder->on('relation')->belongsTo(RelationEntity::class, 'relation.id');
         $builder->on('r2')->belongsTo(TestEntity::class, 'value');
+        $builder->on('noop')->null()->detached();
     }
 
     public function scopes(): array
