@@ -33,7 +33,7 @@ trait QueryExtensionGetterTrait
 
         if ($this->extensionProperty === null) {
             $this->extensionProperty = new ReflectionProperty(AbstractReadCommand::class, 'extension');
-            $this->extensionProperty->setAccessible(true);
+            PHP_VERSION_ID >= 80100 or $this->extensionProperty->setAccessible(true);
         }
 
         return $this->extensionProperty->getValue($query);
